@@ -245,8 +245,28 @@ class service_test(unittest.TestCase):
         
         # Действие
         try:
-            storage_observer.raise_event( event_type.changed_block_period() )
+            storage_observer.raise_event(  event_type.changed_block_period()  )
             pass
         except Exception as ex:
             print(f"ex")
-            
+        
+
+    def test_check_observer_nomenclature_deleted(self):
+        # Подготовка
+        manager = settings_manager()
+        start = start_factory(manager.settings)
+        start.create()
+        key = storage.nomenclature_key()
+        nomenclature_data = start.storage.data[key]
+        service = reference_service(nomenclature_data)
+
+        item = nomenclature_data[0]
+
+        # Действие 
+        service.delete(item)
+
+        try:
+            storage_observer.raise_event(  event_type.nomenclature_deleted()  )
+            pass
+        except Exception as ex:
+            print(f"{ex}")
