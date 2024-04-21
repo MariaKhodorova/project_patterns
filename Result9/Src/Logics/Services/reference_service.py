@@ -11,10 +11,6 @@ from Src.Models.event_type import event_type
 #
 class reference_service(service):
 
-    def __init__(self, data: list) -> None:
-        super().__init__(data)
-        storage_observer.observers.append(self)
-        post_processing_service.observers.append(self)
 
     def add(self, item: reference) -> bool:
         """
@@ -40,7 +36,9 @@ class reference_service(service):
         # вызвать событие
         
         self.data.remove(found[0])
-        storage_observer.raise_event(event_type.nomenclature_deleted())
+
+        storage_observer.raise_event(  event_type.nomenclature_deleted()  )
+
         return True
 
     def change(self, item:reference) -> bool:

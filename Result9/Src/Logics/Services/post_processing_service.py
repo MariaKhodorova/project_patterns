@@ -2,6 +2,7 @@ from Src.Logics.Services.service import service
 from Src.Logics.Services.storage_observer import storage_observer
 from Src.Storage.storage import storage
 from Src.Logics.Services.storage_observer import event_type
+from Src.Models.nomenclature_model import nomenclature_model
 
 
 class post_processing_service(service):
@@ -11,7 +12,7 @@ class post_processing_service(service):
         super().__init__(data)
 
         self.nomenclature = nomenclature
-        storage_observer.observers.append(self)
+        # storage_observer.observers.append(self)
 
 
 
@@ -20,7 +21,7 @@ class post_processing_service(service):
             self.nomenclature_deleted()
 
 
-    def nomenclature_deleted(self):
+    def nomenclature_deleted(self, nomenclature: nomenclature_model):
         for recipe in self.data:
             if self.nomenclature.name in recipe._rows:
                 del recipe._rows[self.nomenclature.name]
