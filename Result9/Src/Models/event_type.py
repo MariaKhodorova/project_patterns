@@ -20,3 +20,6 @@ class event_type(reference):
             Событие удаления номенклатуры из рецептов
         """
         return "nomenclature_deleted"
+    
+    
+

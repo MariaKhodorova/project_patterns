@@ -6,6 +6,9 @@ from Src.reference import reference
 from Src.Models.receipe_model import receipe_model
 from Src.Models.storage_row_model import storage_row_model
 from Src.Models.storage_model import storage_model
+from Src.Logics.Services.storage_observer import storage_observer
+from Src.Logics.Services.post_processing_service import post_processing_service
+from Src.Models.event_type import event_type
 
 # Системное
 from Src.settings import settings
@@ -230,7 +233,12 @@ class start_factory:
             result.append(row)
         
         return result
-        
+    
+    """ @staticmethod
+    def create_observers(data: dict) -> list:
+        observers = []
+        storage.data  """
+
     
     # Основной метод
     def create(self) -> bool:
@@ -241,7 +249,7 @@ class start_factory:
         """
 
         if self.__storage == None:
-            self.__storage = storage()
+            self.__storage = storage() 
 
         if self.__oprions.is_first_start == True:
 
@@ -273,16 +281,14 @@ class start_factory:
             # Другой вариант. Загрузка из источника данных    
             try:
                 self.__storage.load()
+
             except Exception as ex:
                 raise operation_exception(f"Ошибка при формировании шаблонных данных!\n{ex}")     
+            
+ 
+            # Добавляем наблюдателя к каждому элементу номенклатуры
+            for nomen in self.__storage.data:
+                if nomen == storage.nomenclature_key():
+                    storage_observer.raise_event(event_type.nomenclature_deleted())
 
-            
-        
-            
-            
-            
-            
-        
-        
-        
-        
+

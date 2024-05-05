@@ -34,11 +34,9 @@ class reference_service(service):
         found = list(filter(lambda x: x.id == item.id , self.data))     
         if len(found) == 0:
             return False
-            
-        item_to_delete = found[0]  # Сохраняем объект, который мы собираемся удалить
         
-        self.data.remove(item_to_delete)
-        storage_observer.raise_event(event_type.nomenclature_deleted(item_to_delete))   
+        self.data.remove(  found[0] )
+        storage_observer.raise_event(  event_type.nomenclature_deleted()  )   
 
         return True                                      
                                                                                          

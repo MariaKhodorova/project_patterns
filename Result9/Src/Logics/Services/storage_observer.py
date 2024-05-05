@@ -8,7 +8,7 @@ class storage_observer:
     _observers = []
 
 
-    def raise_event(handle_event: str, reference: None):
+    def raise_event(handle_event: str, reference = None):
         """ Сформировать события """
 
         exception_proxy.validate( handle_event, str )
@@ -16,4 +16,5 @@ class storage_observer:
             
             if object is not None:
                 object.handle_event(handle_event)
-    
+
+
