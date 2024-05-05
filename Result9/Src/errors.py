@@ -1,4 +1,6 @@
 import json
+from Src.Logics.Services.storage_observer import storage_observer
+from Src.Models.event_type import event_type
 
 #
 # Класс для обработки и хранения текстовой информации об ошибке
@@ -40,6 +42,9 @@ class error_proxy:
             return
             
         self._error_text = "Ошибка! " + str(exception)    
+
+        storage_observer.raise_event( event_type.create_log(), str(exception) ) 
+
             
     @property        
     def is_empty(self) -> bool:
@@ -82,6 +87,8 @@ class error_proxy:
         
         # Формируем описание        
         json_text = json.dumps({"details" : message}, sort_keys = True, indent = 4,  ensure_ascii = False)  
+
+        storage_observer.raise_event( event_type.create_log(), f"error response: {message}" ) 
         
         # Формируем результат
         result = app.response_class(

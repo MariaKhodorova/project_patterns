@@ -21,6 +21,8 @@ class reference_service(service):
         if len(found) > 0:
             return False
         
+        storage_observer().raise_event(event_type.debug_log(), f"Добавлен новый элемент: (ID: {item.id}; NAME: {item.name})")
+        
         self.data.append(item)
         return True
     
@@ -34,6 +36,8 @@ class reference_service(service):
         found = list(filter(lambda x: x.id == item.id , self.data))     
         if len(found) == 0:
             return False
+        
+        storage_observer().raise_event(event_type.debug_log(), f"Удалён элемент: (ID: {item.id}; NAME: {item.name})")
         
         self.data.remove(  found[0] )
         storage_observer.raise_event(  event_type.nomenclature_deleted()  )   

@@ -9,6 +9,9 @@ from Src.Logics.Services.storage_service import storage_service
 from Src.Models.nomenclature_model import nomenclature_model
 from Src.Logics.Services.service import service
 from Src.Logics.Services.reference_service import reference_service
+from Src.Logics.Services.storage_observer import storage_observer
+from Src.Models.event_type import event_type
+from Src.Logics.Services.logging import logging
 
 
 
@@ -19,6 +22,8 @@ app.config['JSON_AS_ASCII'] = False
 options = settings_manager() 
 start = start_factory(options.settings)
 start.create()
+
+logger = logging([])
 
 
 # Отчетность
@@ -36,6 +41,8 @@ def get_report(storage_key: str):
     # Создаем фабрику
     report = report_factory()
     data = start.storage.data
+
+    storage_observer.raise_event( event_type.create_log(), f"Вызов get_report (storage_key: {storage_key})" ) 
     
     # Формируем результат
     try:
@@ -61,6 +68,8 @@ def get_turns():
         
     if "stop_period" not in args.keys():
         return error_proxy.create_error_response(app, "Необходимо передать параметры: start_period, stop_period!")
+    
+    storage_observer.raise_event( event_type.create_log(), f"Вызов get_turns" )
     
     start_date = datetime.strptime(args["start_period"], "%Y-%m-%d")
     stop_date = datetime.strptime(args["stop_period"], "%Y-%m-%d")
@@ -98,6 +107,8 @@ def get_turns_nomenclature(nomenclature_id):
     if nomenclature_id not in ids:
         return error_proxy.create_error_response(app, "Некорректно передан код номенклатуры!", 400)
     
+    storage_observer.raise_event( event_type.create_log(), f"Вызов get_turns_nomenclature (nomenclature_id: {nomenclature_id})" )
+    
     nomenclature = nomenclatures[nomenclature_id]
       
     data = storage_service( transactions_data  ).create_turns_by_nomenclature( start_date, stop_date, nomenclature )      
@@ -117,6 +128,9 @@ def add_nomenclature():
         item = nomenclature_model().load(data)
         source_data = start.storage.data[  storage.nomenclature_key() ]
         result = reference_service( source_data ).add( item )
+
+        storage_observer.raise_event( event_type.create_log(), f"Вызов add_nomenclature (data.name: {data.name})" )
+
         return service.create_response( {"result": result} )
     except Exception as ex:
         return error_proxy.create_error_response(app,   f"Ошибка при добавлении данных!\n {ex}")
@@ -132,6 +146,9 @@ def delete_nomenclature():
         item = nomenclature_model().load(data)
         source_data = start.storage.data[  storage.nomenclature_key() ]
         result = reference_service( source_data ).delete( item )
+
+        storage_observer.raise_event( event_type.create_log(), f"Вызов delete_nomenclature (item.id: {item.id})" )
+
         return service.create_response( {"result": result} )
     except Exception as ex:
         return error_proxy.create_error_response(app,   f"Ошибка при удалении данных!\n {ex}")
@@ -147,6 +164,9 @@ def change_nomenclature():
         item = nomenclature_model().load(data)
         source_data = start.storage.data[  storage.nomenclature_key() ]
         result = reference_service( source_data ).change( item )
+
+        storage_observer.raise_event( event_type.create_log(), f"Вызов change_nomenclature (item.id: {item.id})" )
+
         return service.create_response( {"result": result} )
     except Exception as ex:
         return error_proxy.create_error_response(app,   f"Ошибка при изменении данных!\n {ex}")
@@ -157,6 +177,9 @@ def get_nomenclature():
         Получить список номенклатуры
     """
     args = request.args
+
+    storage_observer.raise_event( event_type.create_log(), f"Вызов get_nomenclature" ) 
+
     if "id" not in args.keys():
         # Вывод всех элементов
         source_data = start.storage.data[  storage.nomenclature_key() ]
@@ -177,6 +200,9 @@ def get_nomenclature():
 @app.route("/api/block_period", methods=["GET"])
 def get_block_period():
     args = request.args
+
+    storage_observer.raise_event( event_type.create_log(), f"Вызов get_nomenclature" )
+
     if "period" in args.keys():
 
         try:
