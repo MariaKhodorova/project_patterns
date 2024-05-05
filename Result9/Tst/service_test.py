@@ -8,6 +8,7 @@ from Src.Logics.convert_factory import convert_factory
 from Src.Models.nomenclature_model import nomenclature_model
 from Src.Logics.Services.storage_observer import storage_observer
 from Src.Models.event_type import event_type
+from Src.Logics.Services.post_processing_service import post_processing_service
 
 from datetime import datetime
 import unittest
@@ -245,8 +246,28 @@ class service_test(unittest.TestCase):
         
         # Действие
         try:
-            storage_observer.raise_event( event_type.changed_block_period() )
+            storage_observer.raise_event(  event_type.changed_block_period()  )
             pass
         except Exception as ex:
             print(f"ex")
-            
+        
+    
+    def test_check_observer_nomenclature_deleted(self):
+        # Подготовка
+        manager = settings_manager()
+        start = start_factory(manager.settings)
+        start.create()
+        nomenclature = nomenclature_model()
+        service = reference_service(nomenclature)
+
+        # Действие
+        try:
+            storage_observer.raise_event(  event_type.nomenclature_deleted()  )
+            service.delete(nomenclature)
+            pass
+        except Exception as ex:
+            print(f"{ex}")
+
+        # Проверка
+        assert nomenclature is None
+        

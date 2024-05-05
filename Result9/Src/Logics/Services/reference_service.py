@@ -3,11 +3,14 @@ from Src.exceptions import exception_proxy, operation_exception
 from Src.reference import reference
 from Src.Logics.Services.storage_observer import storage_observer
 from Src.Models.event_type import event_type
+from Src.Logics.Services.post_processing_service import post_processing_service
+from Src.Models.event_type import event_type
 
 #
 # Сервис для выполнения CRUD операций
 #
 class reference_service(service):
+
 
     def add(self, item: reference) -> bool:
         """
@@ -21,19 +24,24 @@ class reference_service(service):
         self.data.append(item)
         return True
     
-    def delete(self, item:reference) -> bool:
+
+    def delete(self, item: reference) -> bool:
         """
-            Удалить элемент
+        Удалить элемент
         """
         exception_proxy.validate(item, reference)
+        
         found = list(filter(lambda x: x.id == item.id , self.data))     
         if len(found) == 0:
             return False
+            
+        item_to_delete = found[0]  # Сохраняем объект, который мы собираемся удалить
         
-        # вызвать событие
-        
-        self.data.remove(found[0])
-        return True
+        self.data.remove(item_to_delete)
+        storage_observer.raise_event(event_type.nomenclature_deleted(item_to_delete))   
+
+        return True                                      
+                                                                                         
 
     def change(self, item:reference) -> bool:
         """
