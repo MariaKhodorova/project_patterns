@@ -85,6 +85,10 @@ class storage_service(service):
         
         # Рассчитанные обороты
         calculated_turns = self.__build_turns( filter. data )
+
+        storage_observer().raise_event(event_type.debug_log(),
+            f"Вызов create_turns (ARGS: {start_period.strftime('%m/%d/%Y')}, {
+            stop_period.strftime('%m/%d/%Y')})")
         
         # Сформируем результат
         aggregate_key = process_factory.aggregate_key()
@@ -120,7 +124,11 @@ class storage_service(service):
             raise operation_exception(f"Невозможно сформировать обороты по указанным данных: {filter.error}")
         
         # Рассчитанные обороты    
-        calculated_turns =  self.__build_turns( filter. data )   
+        calculated_turns =  self.__build_turns( filter. data )  
+
+        storage_observer().raise_event(event_type.debug_log(),
+            f"Вызов create_turns_by_nomenclature (ARGS: {start_period.strftime('%m/%d/%Y')}, 
+            {stop_period.strftime('%m/%d/%Y')}, {nomenclature.id})") 
         
         # Сформируем результат
         aggregate_key = process_factory.aggregate_key()
@@ -141,6 +149,9 @@ class storage_service(service):
         filter = prototype.filter_by_nomenclature( nomenclature )
         if not filter.is_empty:
             raise operation_exception(f"Невозможно сформировать обороты по указанным данных: {filter.error}")
+        
+        storage_observer().raise_event(event_type.debug_log(),
+            f"Вызов create_turns_only_nomenclature (ARGS: {nomenclature.id})")
          
         return self.__build_turns( filter. data )   
     
@@ -168,6 +179,9 @@ class storage_service(service):
                     transactions.append( transaction )
                     
             filter.data = self.data        
+
+        storage_observer().raise_event(event_type.debug_log(),
+            f"Вызов create_turns_by_receipt (ARGS: {receipt.id})")
             
         return self.__build_turns( transactions )     
     
@@ -205,6 +219,9 @@ class storage_service(service):
         """ Обработать события"""
 
         super().handle_event(handle_type)
+
+        storage_observer().raise_event(event_type.debug_log(),
+            f"Вызов handle_event:changed_block_period")
 
         if handle_type == event_type.changed_block_period:
             self.__build_blocked_turns()

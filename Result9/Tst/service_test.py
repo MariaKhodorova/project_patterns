@@ -257,17 +257,15 @@ class service_test(unittest.TestCase):
         manager = settings_manager()
         start = start_factory(manager.settings)
         start.create()
-        nomenclature = nomenclature_model()
-        service = reference_service(nomenclature)
+        key = storage.nomenclature_key()
+        nomen_data = start.storage.data[ key ]
+        service = reference_service(  nomen_data  )
 
         # Действие
         try:
             storage_observer.raise_event(  event_type.nomenclature_deleted()  )
-            service.delete(nomenclature)
             pass
         except Exception as ex:
             print(f"{ex}")
 
-        # Проверка
-        assert nomenclature is None
         

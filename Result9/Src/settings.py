@@ -95,5 +95,7 @@ class settings():
             raise argument_exception("Некорректно переданы параметры!")
         
         if legacy_period == self._block_period:
-            storage_observer.raise_event(  event_type.changed_block_period()  )
+            arg1 = event_type.changed_block_period(  )
+            arg2 = None
+            storage_observer.raise_event(  arg1, arg2 )
             

@@ -12,8 +12,7 @@ class post_processing_service(service):
         super().__init__(data)
 
         self.nomenclature = nomenclature
-        # storage_observer.observers.append(self)
-
+        storage_observer.observers.append(self)
 
 
     def handle_event(self, handle_type: str):
@@ -23,6 +22,7 @@ class post_processing_service(service):
 
     def nomenclature_deleted(self, nomenclature: nomenclature_model):
         for recipe in self.data:
-            if self.nomenclature.name in recipe._rows:
-                del recipe._rows[self.nomenclature.name]
+            if self.nomenclature in recipe._rows:
+                del recipe._rows[self.nomenclature]
                 recipe.__calc_brutto()
+
