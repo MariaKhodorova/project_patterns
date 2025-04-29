@@ -20,3 +20,17 @@ class event_type(reference):
             Событие удаления номенклатуры из рецептов
         """
         return "nomenclature_deleted"
+    
+    @staticmethod
+    def create_log() -> str:
+        """
+            Событие для логирования
+        """
+        return "create_log"
+
+    @staticmethod
+    def debug_log() -> str:
+        """
+            Событие для логирования
+        """
+        return "debug_log"
