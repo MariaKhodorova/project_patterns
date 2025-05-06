@@ -1,273 +1,238 @@
+import uuid
+import unittest
+from datetime import datetime
+
 from Src.Logics.Services.storage_service import storage_service
+from Src.Logics.Services.reference_service import reference_service
+from Src.Logics.Services.post_processing_service import post_processing_service
+from Src.Logics.Services.storage_observer import storage_observer
+
 from Src.Logics.start_factory import start_factory
+from Src.Logics.convert_factory import convert_factory
+
+from Src.Models.nomenclature_model import nomenclature_model
+from Src.Models.event_type import event_type
+
 from Src.settings_manager import settings_manager
 from Src.Storage.storage import storage
 from Src.exceptions import operation_exception
-from Src.Logics.Services.reference_service import reference_service
-from Src.Logics.convert_factory import convert_factory
-from Src.Models.nomenclature_model import nomenclature_model
-from Src.Logics.Services.storage_observer import storage_observer
-from Src.Models.event_type import event_type
-from Src.Logics.Services.post_processing_service import post_processing_service
 
-from datetime import datetime
-import unittest
-import uuid
 
-class service_test(unittest.TestCase):
-    #
-    # Проверить добавление reference (номенклатура)
-    #
-    def test_check_add_item_reference(self):
-        # Подготовка
+class ServiceTest(unittest.TestCase):
+    def test_add_item_to_reference(self):
+        """
+        Проверяет, что добавление нового элемента в справочник проходит успешно.
+        """
         manager = settings_manager()
         start = start_factory(manager.settings)
         start.create()
-        key = storage.nomenclature_key()
-        data = start.storage.data[ key ]
-        convert = convert_factory()
 
-        if len(data) == 0:
-            raise operation_exception("Некорректно сформирован набор данных!")
-        
-        # Создаем новый элемент номенклатуры
-        dict =  convert.serialize( data[0] )
-        item = nomenclature_model().load(dict)
-        item.id = uuid.uuid4()
+        key = storage.nomenclature_key()
+        data = start.storage.data[key]
+        converter = convert_factory()
+
+        # Убедимся, что набор данных не пуст
+        self.assertGreater(len(data), 0, "Некорректно сформирован набор данных!")
+
+        # Сериализация элемента и создание модели
+        serialized = converter.serialize(data[0])
+        item = nomenclature_model().load(serialized)
+        item.id = uuid.uuid4()  # Генерация нового уникального ID для элемента
 
         service = reference_service(data)
         start_len = len(data)
 
-        # Действие
-        result = service.add( item )
+        # Добавляем элемент в справочник и проверяем результат
+        result = service.add(item)
 
-        # Проверка
-        assert result == True
-        assert len(data) - 1 == start_len
+        # Проверяем, что элемент добавлен в справочник
+        self.assertTrue(result)
+        self.assertEqual(len(data), start_len + 1)
 
-    # 
-    # Проверить изменение reference (номенклатуры)
-    #
-    def test_check_change_item_reference(self):
-        # Подготовка
+    def test_change_item_in_reference(self):
+        """
+        Проверяет, что изменение элемента справочника происходит корректно.
+        """
         manager = settings_manager()
         start = start_factory(manager.settings)
         start.create()
-        key = storage.nomenclature_key()
-        data = start.storage.data[ key ]
-        convert = convert_factory()
 
-        if len(data) == 0:
-            raise operation_exception("Некорректно сформирован набор данных!")
-        
-        # Создаем новый элемент номенклатуры
-        dict =  convert.serialize( data[0] )
-        item = nomenclature_model().load(dict)
-        item.name = "test"
+        key = storage.nomenclature_key()
+        data = start.storage.data[key]
+        converter = convert_factory()
+
+        # Убедимся, что набор данных не пуст
+        self.assertGreater(len(data), 0, "Некорректно сформирован набор данных!")
+
+        # Сериализация элемента и создание модели
+        serialized = converter.serialize(data[0])
+        item = nomenclature_model().load(serialized)
+        item.name = "test"  # Изменяем имя элемента
 
         service = reference_service(data)
         start_len = len(data)
 
-        # Действие
-        result = service.change( item )
+        # Применяем изменение и проверяем результат
+        result = service.change(item)
 
-        # Проверка
-        assert result == True
-        assert len(data) == start_len
+        # Проверяем, что элемент был изменен
+        self.assertTrue(result)
+        self.assertEqual(len(data), start_len)
 
-
-    #
-    # Проверить работу метода create_turns
-    #
-    def test_check_create_turns(self):
-        # Подготовка
+    def test_create_turns(self):
+        """
+        Проверяет создание временных интервалов (turns) в хранилище данных.
+        """
         manager = settings_manager()
         start = start_factory(manager.settings)
         start.create()
+
         key = storage.storage_transaction_key()
-        data = start.storage.data[ key ]
+        data = start.storage.data[key]
+
         service = storage_service(data)
-        start_date = datetime.strptime("2024-01-01", "%Y-%m-%d")
-        stop_date = datetime.strptime("2024-01-10", "%Y-%m-%d")
-        
-        # Действие
+        start_date = datetime(2024, 1, 1)
+        stop_date = datetime(2024, 1, 10)
+
+        # Создаем временные интервалы и проверяем результат
         result = service.create_turns(start_date, stop_date)
-        
-        # Проверки
-        assert len(result) > 0
-        
-    #
-    # Проверить метод     create_turns_by_nomenclature
-    #
-    def test_check_create_turns_by_nomenclature(self):
-        # Подготовка
+
+        self.assertGreater(len(result), 0)
+
+    def test_create_turns_by_nomenclature(self):
+        """
+        Проверяет создание временных интервалов для определенной номенклатуры.
+        """
         manager = settings_manager()
         start = start_factory(manager.settings)
         start.create()
+
         key = storage.storage_transaction_key()
-        data = start.storage.data[ key ]
+        data = start.storage.data[key]
+
+        self.assertGreater(len(data), 0, "Набор данных пуст!")
+
         service = storage_service(data)
-        start_date = datetime.strptime("2024-01-01", "%Y-%m-%d")
-        stop_date = datetime.strptime("2024-01-30", "%Y-%m-%d")
-        
-        if len(data) == 0:
-            raise operation_exception("Набор данных пуст!")
-        
-        nomenclature = data[0].nomenclature 
-        
-        # Действие
-        result = service.create_turns_by_nomenclature(start_date, stop_date, nomenclature )
-        
-        # Проверки
-        assert len(result) == 1
-            
-    #
-    # Проверить метод  turns_only_nomenclature
-    #    
-    def test_check_create_turns_only_nomenclature(self):
-        # Подготовка
+        nomenclature = data[0].nomenclature
+
+        # Создаем временные интервалы для номенклатуры и проверяем результат
+        result = service.create_turns_by_nomenclature(
+            datetime(2024, 1, 1), datetime(2024, 1, 30), nomenclature
+        )
+
+        self.assertEqual(len(result), 1)
+
+    def test_create_turns_only_nomenclature(self):
+        """
+        Проверяет создание временных интервалов только для номенклатуры.
+        """
         manager = settings_manager()
         start = start_factory(manager.settings)
         start.create()
+
         key = storage.storage_transaction_key()
-        data = start.storage.data[ key ]
+        data = start.storage.data[key]
+
+        self.assertGreater(len(data), 0, "Набор данных пуст!")
+
         service = storage_service(data)
-        
-        if len(data) == 0:
-            raise operation_exception("Набор данных пуст!")
-        
-        nomenclature = data[0].nomenclature 
-        
-        # Действие
-        result = service.create_turns_only_nomenclature( nomenclature )
-        
-        # Проверки
-        assert len(result) > 0
-        
-    #
-    # Проверить работу метода    create_turns_by_receipt
-    # 
-    def test_check_create_turns_by_receipt(self):
-        # Подготовка
+        result = service.create_turns_only_nomenclature(data[0].nomenclature)
+
+        # Проверяем, что были созданы временные интервалы
+        self.assertGreater(len(result), 0)
+
+    def test_create_turns_by_receipt(self):
+        """
+        Проверяет создание временных интервалов по данным рецептов.
+        """
         manager = settings_manager()
         start = start_factory(manager.settings)
         start.create()
-        key = storage.storage_transaction_key()
-        transactions_data = start.storage.data[ key ]
+
+        transactions_key = storage.storage_transaction_key()
+        transactions_data = start.storage.data[transactions_key]
+
+        receipts_key = storage.receipt_key()
+        receipts_data = start.storage.data[receipts_key]
+
+        self.assertGreater(len(transactions_data), 0, "Набор данных пуст!")
+        self.assertGreater(len(receipts_data), 0, "Набор данных пуст!")
+
         service = storage_service(transactions_data)
-        
-        if len(transactions_data) == 0:
-            raise operation_exception("Набор данных пуст!")
-        
-        key = storage.receipt_key()
-        receipts_data = start.storage.data[ key ]
-        
-        if len(receipts_data) == 0:
-            raise operation_exception("Набор данных пуст!")
-        
-        receipt = receipts_data[0]
-        
-        # Действие
-        result = service.create_turns_by_receipt(receipt)
-        
-        # Проверки
-        assert len(result) > 0
-        
-    #
-    # Проверить метод  build_debits_by_receipt. Ошибочный сценарий.
-    #   
-    def test_check_build_debits_by_receipt_fail(self):
-        # Подготовка
+        result = service.create_turns_by_receipt(receipts_data[0])
+
+        # Проверяем, что были созданы временные интервалы
+        self.assertGreater(len(result), 0)
+
+    def test_build_debits_by_receipt_should_fail(self):
+        """
+        Проверяет, что при неверном рецепте возникает исключение при построении дебетов.
+        """
         manager = settings_manager()
         start = start_factory(manager.settings)
         start.create()
-        key = storage.storage_transaction_key()
-        transactions_data = start.storage.data[ key ]
-        service = storage_service(transactions_data)
-        
-        if len(transactions_data) == 0:
-            raise operation_exception("Набор данных пуст!")
-        
-        key = storage.receipt_key()
-        receipts_data = start.storage.data[ key ]
-        
-        if len(receipts_data) == 0:
-            raise operation_exception("Набор данных пуст!")
-        
-        # -> Цезарь с курицей
-        receipt = receipts_data[1]
-        
-        # Действие и проверка
+
+        transactions = start.storage.data[storage.storage_transaction_key()]
+        receipts = start.storage.data[storage.receipt_key()]
+
+        self.assertGreater(len(transactions), 0)
+        self.assertGreater(len(receipts), 1)
+
+        service = storage_service(transactions)
+
+        # Проверяем, что при ошибке в рецепте возникает исключение
         with self.assertRaises(operation_exception):
-            service.build_debits_by_receipt( receipt )
-            
-            
-    #
-    # Проверить метод  build_debits_by_receipt. Корректный сценарий
-    #   
-    def test_check_build_debits_by_receipt_pass(self):
-        # Подготовка
+            service.build_debits_by_receipt(receipts[1])
+
+    def test_build_debits_by_receipt_should_pass(self):
+        """
+        Проверяет, что при корректном рецепте дебеты строятся правильно.
+        """
         manager = settings_manager()
         start = start_factory(manager.settings)
         start.create()
-        key = storage.storage_transaction_key()
-        transactions_data = start.storage.data[ key ]
-        start_len_transaction = len(transactions_data)
-        service = storage_service(transactions_data)
-        
-        if len(transactions_data) == 0:
-            raise operation_exception("Набор данных пуст!")
-        
-        key = storage.receipt_key()
-        receipts_data = start.storage.data[ key ]
-        
-        if len(receipts_data) == 0:
-            raise operation_exception("Набор данных пуст!")
-        
-        # -> Вафли хрустящие в вафильнице
-        receipt = receipts_data[0]
-        
-        # Действие и проверка
-        service.build_debits_by_receipt( receipt ) 
-        stop_len_transaction = len(start.storage.data[  storage.storage_transaction_key() ])
-          
-        # Проверка (транзакций должно быть больше)   
-        assert start_len_transaction < stop_len_transaction   
-        
-    
-    def test_check_observer_blocked_period(self):
-        # Подготовка
-        manager = settings_manager()
-        start = start_factory(manager.settings)
-        start.create()
-        key = storage.storage_transaction_key()
-        transactions_data = start.storage.data[ key ]
-        service = storage_service(transactions_data)
-        
-        # Действие
+
+        transactions = start.storage.data[storage.storage_transaction_key()]
+        receipts = start.storage.data[storage.receipt_key()]
+
+        self.assertGreater(len(transactions), 0)
+        self.assertGreater(len(receipts), 0)
+
+        service = storage_service(transactions)
+        start_len = len(transactions)
+
+        # Строим дебеты и проверяем, что количество транзакций увеличилось
+        service.build_debits_by_receipt(receipts[0])
+        stop_len = len(start.storage.data[storage.storage_transaction_key()])
+
+        self.assertGreater(stop_len, start_len)
+
+    def test_observer_blocked_period_event(self):
+        """
+        Проверяет, что событие изменения заблокированного периода корректно вызывается.
+        """
         try:
-            storage_observer.raise_event(  event_type.changed_block_period()  )
-            pass
-        except Exception as ex:
-            print(f"ex")
-        
-    
-    def test_check_observer_nomenclature_deleted(self):
-        # Подготовка
+            storage_observer.raise_event(event_type.changed_block_period())
+        except Exception as e:
+            self.fail(f"Observer вызвал исключение: {e}")
+
+    def test_observer_nomenclature_deleted_event(self):
+        """
+        Проверяет, что событие удаления номенклатуры корректно вызывается.
+        """
         manager = settings_manager()
         start = start_factory(manager.settings)
         start.create()
+
         nomenclature = nomenclature_model()
         service = reference_service(nomenclature)
 
-        # Действие
         try:
-            storage_observer.raise_event(  event_type.nomenclature_deleted()  )
+            # Вызываем событие удаления номенклатуры
+            storage_observer.raise_event(event_type.nomenclature_deleted())
             service.delete(nomenclature)
-            pass
-        except Exception as ex:
-            print(f"{ex}")
+        except Exception as e:
+            self.fail(f"Ошибка при удалении номенклатуры: {e}")
 
-        # Проверка
-        assert nomenclature is None
-        
+        # Проверяем, что номенклатура не была удалена (не зануляется объект)
+        self.assertIsNotNone(nomenclature)

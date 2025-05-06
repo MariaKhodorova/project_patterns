@@ -1,166 +1,86 @@
 import unittest
-from Src.Logics.reporting import reporting
-from Src.Models.unit_model import unit_model
-from Src.Storage.storage import storage
-from Src.Logics.csv_reporting import csv_reporting
-from Src.Models.nomenclature_model import nomenclature_model
-from Src.Models.group_model import group_model
-from Src.Logics.markdown_reporting import markdown_reporting
-from Src.Logics.json_reporting import json_reporting
 from Src.Logics.start_factory import start_factory
-from Src.settings import settings
+from Src.settings_manager import settings_manager
+from Src.Storage.storage import storage
+from Src.Logics.report_factory import report_factory
 
+class FactoryTest(unittest.TestCase):
 
-class reporting_test(unittest.TestCase):
-    
-    
-    def test_check_json_reporting_build(self):
+    def test_check_method_storage_keys(self):
+        """Проверить метод storage_keys в хранилище."""
         # Подготовка
-        data = {}
-        list = []
-        item = unit_model.create_gram()
-        list.append(item)
-        key = storage.unit_key()
-        data[  key  ] = list 
-        report = json_reporting( data )
-        
-        # Действие
-        result = report.create( key )
-        
-        # Проверки
-        assert result is not None
-        assert len(result) > 0 
-        
-    #
-    # Проверить формирование рецептов в формате csv
-    #    
-    def test_check_csv_create_receipe_key(self):
-        # Подготовка
-        optiins = settings()
-        start =   start_factory( optiins )
+        manager = settings_manager()
+        start = start_factory(manager.settings)
         start.create()
-        key = storage.receipt_key()
-        report = csv_reporting( start.storage.data )
-        
+
         # Действие
-        result = report.create( key )
-        
+        result = start.storage.storage_keys(start.storage)
+
         # Проверки
-        assert result is not None
-        assert len(result) > 0 
-        
-    #
-    # Проверить формирование рецептов в формате Markdown
-    #    
-    def test_check_markdown_create_receipt_key(self):
+        self.assertIsNotNone(result, "Метод storage_keys вернул None!")
+        self.assertGreater(len(result), 0, "Метод storage_keys вернул пустой список!")
+
+    def test_check_report_factory_create(self):
+        """Проверка работы фабрики для построения отчетности."""
         # Подготовка
-        optiins = settings()
-        start =   start_factory( optiins )
+        manager = settings_manager()
+        start = start_factory(manager.settings)
         start.create()
-        key = storage.receipt_key()
-        report = markdown_reporting( start.storage.data )
-        
-        # Действие
-        result = report.create( key )
-        
-        # Проверки
-        assert result is not None
-        assert len(result) > 0 
-            
-        
-    
-    #
-    # Проверить статический метод build класса reporting
-    #
-    def test_check_reporting_build(self):
-        # Подготовка
-        data = {}
-        list = []
-        item = unit_model.create_gram()
-        list.append(item)
-        data[  storage.unit_key()  ] = list 
-        
-        # Дейстие
-        result = reporting.build( storage.unit_key(), data )
-        
-        # Проверки
-        assert result is not None
-        assert len(result) > 0
-        
-        
-    #
-    # Проверить формированеи отчета в csv формате по единицам измерения
-    #    
-    def test_check_csv_create_unit_key(self):
-        # Подготовка
-        data = {}
-        list = []
-        item = unit_model.create_gram()
-        list.append(item)
+        factory = report_factory()
         key = storage.unit_key()
-        data[  key  ] = list 
-        report = csv_reporting( data )
-        
+
         # Действие
-        result = report.create( key )
-        
+        report = factory.create(manager.settings.report_mode, start.storage.data)
+
         # Проверки
-        assert result is not None
-        assert len(result) > 0
-        
-        
-    #
-    # Проверить формирование отчета в csv формате по номенклатуре
-    #           
-    def test_check_csv_create_nomenclature_key(self):
+        self.assertIsNotNone(report, "Фабрика отчетности не создала отчет!")
+        self.assertIsNotNone(report.create(key), "Отчет не был создан для ключа!")
+
+    def test_check_create_receipts(self):
+        """Проверка создания начальных рецептов."""
         # Подготовка
-        data = {}
-        list = []
-        
-        unit = unit_model.create_killogram()
-        group = group_model.create_default_group()
-        item = nomenclature_model("Тушка бройлера", group, unit )
-        item.description = "Ингредиент для салата"
-        list.append(item)
-        
-        key = storage.nomenclature_key()
-        
-        data[  key  ] = list 
-        report = csv_reporting(  data )
-        
-        # Действие
-        result = report.create( key )
-        
+        items = start_factory.create_receipts()
+
         # Проверки
-        assert result is not None
-        assert len(result) > 0
-           
-        file = open("csv_report.csv", "w")
-        file.write(result)
-        file.close()
-        
-        
-    #
-    # Проверить формитирование отчета в markdown формате по ед / измерениям
-    #    
-    def test_check_markdown_create_unit_key(self):
-         # Подготовка
-        data = {}
-        list = []
-        item = unit_model.create_gram()
-        list.append(item)
-        key = storage.unit_key()
-        data[  key  ] = list 
-        report = markdown_reporting(  data )
-        
-        # Действие
-        result = report.create( key )
-        
+        self.assertGreater(len(items), 0, "Рецепты не были созданы!")
+
+    def test_check_create_nomenclatures(self):
+        """Проверка создания начальной номенклатуры."""
+        # Подготовка
+        items = start_factory.create_nomenclatures()
+
         # Проверки
-        assert result is not None
-        assert len(result) > 0
-        
-        file = open("markdown_report.md", "w")
-        file.write(result)
-        file.close()
-        
+        self.assertGreater(len(items), 0, "Номенклатура не была создана!")
+
+    def test_check_create_units(self):
+        """Проверка создания списка единиц измерения."""
+        # Подготовка
+        items = start_factory.create_units()
+
+        # Проверки
+        self.assertGreater(len(items), 0, "Единицы измерения не были созданы!")
+
+    def test_check_create_groups(self):
+        """Проверка создания списка групп."""
+        # Подготовка
+        items = start_factory.create_groups()
+
+        # Проверки
+        self.assertGreater(len(items), 0, "Группы не были созданы!")
+
+    def test_check_factory_create(self):
+        """Проверка работы метода create класса start_factory."""
+        # Подготовка
+        manager = settings_manager()
+        factory = start_factory(manager.settings)
+
+        # Действие
+        factory.create()
+
+        # Проверки
+        self.assertIsNotNone(factory.storage, "Хранилище не было создано!")
+        self.assertIn(storage.nomenclature_key(), factory.storage.data, "Ключ номенклатуры не найден в данных!")
+        self.assertIn(storage.receipt_key(), factory.storage.data, "Ключ рецепта не найден в данных!")
+        self.assertIn(storage.group_key(), factory.storage.data, "Ключ группы не найден в данных!")
+        self.assertIn(storage.unit_key(), factory.storage.data, "Ключ единиц измерения не найден в данных!")
+        self.assertIn(storage.storage_transaction_key(), factory.storage.data, "Ключ транзакций не найден в данных!")

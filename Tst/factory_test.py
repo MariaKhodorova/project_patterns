@@ -1,121 +1,87 @@
+import unittest
 from Src.Logics.start_factory import start_factory
 from Src.settings_manager import settings_manager
 from Src.Storage.storage import storage
 from Src.Logics.report_factory import report_factory
 
-import unittest
+class FactoryTest(unittest.TestCase):
 
-#
-# Набор автотестов для проверки работы фабричного метода
-# 
-class factory_test(unittest.TestCase):
-
-    # 
-    # Проверить метод storage_keys в хранилище
-    #
     def test_check_method_storage_keys(self):
+        """Проверка метода storage_keys в хранилище."""
         # Подготовка
         manager = settings_manager()
-        start = start_factory( manager.settings )
+        start = start_factory(manager.settings)
         start.create()
-        
-        # Действия
-        result = start.storage.storage_keys( start.storage  )
-        
+
+        # Действие
+        result = start.storage.storage_keys(start.storage)
+
         # Проверки
-        assert result is not None
-        assert len(result) > 0
-     
-    #
-    # Проверка работы фабрики для построения отчетности
-    #
+        self.assertIsNotNone(result, "Метод storage_keys вернул None!")
+        self.assertGreater(len(result), 0, "Метод storage_keys вернул пустой список!")
+
     def test_check_report_factory_create(self):
+        """Проверка работы фабрики для построения отчетности."""
         # Подготовка
         manager = settings_manager()
-        start = start_factory( manager.settings )
+        start = start_factory(manager.settings)
         start.create()
         factory = report_factory()
         key = storage.unit_key()
 
         # Действие
-        report = factory.create( 
-                                manager.settings.report_mode, 
-                                start.storage.data)
-        
+        report = factory.create(manager.settings.report_mode, start.storage.data)
+
         # Проверки
-        assert report is not None
-        print ( report.create(key) )
- 
-    #
-    # Проверка создания начальных рецептов
-    #    
+        self.assertIsNotNone(report, "Фабрика отчетности не создала отчет!")
+        report_result = report.create(key)
+        self.assertIsNotNone(report_result, "Отчет не был создан для ключа!")
+
     def test_check_create_receipts(self):
+        """Проверка создания начальных рецептов."""
         # Подготовка
         items = start_factory.create_receipts()
-        
-        # Действие
-        
+
         # Проверки
-        assert len(items) > 0     
-        
-    # 
-    # Проверка создание начальной номенклатуры
-    #    
+        self.assertGreater(len(items), 0, "Рецепты не были созданы!")
+
     def test_check_create_nomenclatures(self):
+        """Проверка создания начальной номенклатуры."""
         # Подготовка
         items = start_factory.create_nomenclatures()
-        
-        # действие
-        
-        # Прверки
-        assert len(items) > 0 
-        
-        
-    #
-    # Проверка создание списка единиц измерения
-    #    
+
+        # Проверки
+        self.assertGreater(len(items), 0, "Номенклатура не была создана!")
+
     def test_check_create_units(self):
+        """Проверка создания списка единиц измерения."""
         # Подготовка
         items = start_factory.create_units()
-        
-        # Действие
-        
+
         # Проверки
-        assert len(items) > 0    
-     
-    #
-    # Проверка создания списка групп
-    # 
+        self.assertGreater(len(items), 0, "Единицы измерения не были созданы!")
+
     def test_check_create_groups(self):
+        """Проверка создания списка групп."""
         # Подготовка
         items = start_factory.create_groups()
-        
-        # Действие
-        
-        # Проверки    
-        assert len(items) > 0
-        
-        
-    #      
-    # Проверка работы класса start_factory. Метод create
-    #
+
+        # Проверки
+        self.assertGreater(len(items), 0, "Группы не были созданы!")
+
     def test_check_factory_create(self):
+        """Проверка работы метода create класса start_factory."""
         # Подготовка
         manager = settings_manager()
-        factory = start_factory( manager.settings )
-        
-        
+        factory = start_factory(manager.settings)
+
         # Действие
         factory.create()
-        
-        # Проверка
-        assert not factory.storage is None
-        assert storage.nomenclature_key() in factory.storage.data
-        assert storage.receipt_key() in factory.storage.data
-        assert storage.group_key() in factory.storage.data
-        assert storage.unit_key() in factory.storage.data
-        assert storage.storage_transaction_key() in factory.storage.data
-        
-                     
-        
-       
+
+        # Проверки
+        self.assertIsNotNone(factory.storage, "Хранилище не было создано!")
+        self.assertIn(storage.nomenclature_key(), factory.storage.data, "Ключ номенклатуры не найден в данных!")
+        self.assertIn(storage.receipt_key(), factory.storage.data, "Ключ рецепта не найден в данных!")
+        self.assertIn(storage.group_key(), factory.storage.data, "Ключ группы не найден в данных!")
+        self.assertIn(storage.unit_key(), factory.storage.data, "Ключ единиц измерения не найден в данных!")
+        self.assertIn(storage.storage_transaction_key(), factory.storage.data, "Ключ транзакций не найден в данных!")
