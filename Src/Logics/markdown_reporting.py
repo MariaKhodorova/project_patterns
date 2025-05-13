@@ -1,35 +1,49 @@
 from Src.Logics.reporting import reporting
 from Src.exceptions import operation_exception
 
+#
+# Класс — реализация построения отчетных данных в формате Markdown
+#
 class markdown_reporting(reporting):
-    
-      def create(self, storage_key: str):
+
+    def create(self, storage_key: str):
+        """
+        Сформировать Markdown-отчет по ключу хранилища
+
+        Args:
+            storage_key (str): Ключ доступа к данным из хранилища
+
+        Returns:
+            str: Отчет в формате Markdown
+
+        Raises:
+            operation_exception: Если данные отсутствуют или не заполнены
+        """
         super().create(storage_key)
         result = []
 
-        # Исходные данные
-        items = self.data[ storage_key ]
-        if items == None:
+        # Извлечение исходных данных
+        items = self.data.get(storage_key)
+        if items is None:
             raise operation_exception("Невозможно сформировать данные. Данные не заполнены!")
-        
-        
+
         if len(items) == 0:
             raise operation_exception("Невозможно сформировать данные. Нет данных!")
-        
-        # Заголовок
+
+        # Заголовок отчета
         result.append(f"# {storage_key}")
-        
-        # Шапка таблицы
+
+        # Формирование шапки таблицы
         header = ""
         line = ""
         for field in self.fields:
             header += f"|{field}"
             line += "|--"
-        
+
         result.append(f"{header}|")
         result.append(f"{line}|")
-        
-        # Данные
+
+        # Формирование строк таблицы
         for item in items:
             row = ""
             for field in self.fields:
@@ -38,12 +52,7 @@ class markdown_reporting(reporting):
                     value = getattr(item, field)
                     if isinstance(value, (list, dict)) or value is None:
                         value = ""
-                        
-                    row +=f"|{value}"  
-                
+                    row += f"|{value}"
             result.append(f"{row}|")
-            
-        return "\n".join(result)        
-    
-     
-    
+
+        return "\n".join(result)
